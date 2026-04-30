@@ -32,12 +32,13 @@ public sealed class ItemTests
     [Fact]
     public void ItemStatus_ShouldHaveExpectedValues()
     {
-        Enum.GetValues<ItemStatus>().Should().Contain([
+        Enum.GetValues<ItemStatus>().Should().BeEquivalentTo(new[]
+        {
             ItemStatus.Active,
             ItemStatus.Inactive,
             ItemStatus.Draft,
             ItemStatus.Approved,
             ItemStatus.Rejected
-        ]);
+        });
     }
 }

@@ -7,6 +7,7 @@ using JamaConnect.Infrastructure.JamaConnect;
 using JamaConnect.Infrastructure.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace JamaConnect.Infrastructure.Extensions;
 
@@ -18,8 +19,21 @@ public static class ServiceCollectionExtensions
     {
         services.Configure<JamaConnectOptions>(configuration.GetSection(JamaConnectOptions.SectionName));
 
-        services.AddHttpClient("auth");
-        services.AddHttpClient("jama");
+        services.AddHttpClient("auth")
+            .ConfigureHttpClient((sp, client) =>
+            {
+                var opts = sp.GetRequiredService<IOptions<JamaConnectOptions>>().Value;
+                client.BaseAddress = new Uri(opts.BaseUrl);
+                client.Timeout = TimeSpan.FromSeconds(opts.TimeoutSeconds);
+            });
+
+        services.AddHttpClient("jama")
+            .ConfigureHttpClient((sp, client) =>
+            {
+                var opts = sp.GetRequiredService<IOptions<JamaConnectOptions>>().Value;
+                client.BaseAddress = new Uri(opts.BaseUrl);
+                client.Timeout = TimeSpan.FromSeconds(opts.TimeoutSeconds);
+            });
 
         services.AddSingleton<IAuthenticationService, OidcAuthenticationService>();
         services.AddSingleton<JamaConnectClient>();

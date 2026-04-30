@@ -3,8 +3,6 @@ using System.Net.Http.Json;
 using JamaConnect.Domain.Interfaces;
 using JamaConnect.Domain.Models;
 using JamaConnect.Infrastructure.JamaConnect.Dto;
-using JamaConnect.Infrastructure.Options;
-using Microsoft.Extensions.Options;
 
 namespace JamaConnect.Infrastructure.JamaConnect;
 
@@ -12,22 +10,18 @@ internal sealed class JamaConnectClient : IProjectService, IItemService
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IAuthenticationService _authenticationService;
-    private readonly JamaConnectOptions _options;
 
     public JamaConnectClient(
         IHttpClientFactory httpClientFactory,
-        IAuthenticationService authenticationService,
-        IOptions<JamaConnectOptions> options)
+        IAuthenticationService authenticationService)
     {
         _httpClientFactory = httpClientFactory;
         _authenticationService = authenticationService;
-        _options = options.Value;
     }
 
     private async Task<HttpClient> CreateAuthorizedClientAsync(CancellationToken cancellationToken)
     {
         var client = _httpClientFactory.CreateClient("jama");
-        client.BaseAddress = new Uri(_options.BaseUrl);
         var token = await _authenticationService.GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
         if (!string.IsNullOrEmpty(token))
         {

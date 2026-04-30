@@ -6,10 +6,11 @@ using Microsoft.Extensions.Options;
 
 namespace JamaConnect.Infrastructure.Authentication;
 
-internal sealed class OidcAuthenticationService : IAuthenticationService
+internal sealed class OidcAuthenticationService : IAuthenticationService, IDisposable
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly JamaConnectOptions _options;
+    private readonly SemaphoreSlim _tokenLock = new(1, 1);
     private string? _accessToken;
     private DateTime _tokenExpiry = DateTime.MinValue;
 
@@ -28,8 +29,21 @@ internal sealed class OidcAuthenticationService : IAuthenticationService
             return _accessToken;
         }
 
-        await LoginAsync(cancellationToken).ConfigureAwait(false);
-        return _accessToken;
+        await _tokenLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (IsAuthenticated)
+            {
+                return _accessToken;
+            }
+
+            await LoginAsync(cancellationToken).ConfigureAwait(false);
+            return _accessToken;
+        }
+        finally
+        {
+            _tokenLock.Release();
+        }
     }
 
     public async Task LoginAsync(CancellationToken cancellationToken = default)
@@ -64,6 +78,8 @@ internal sealed class OidcAuthenticationService : IAuthenticationService
         _tokenExpiry = DateTime.MinValue;
         return Task.CompletedTask;
     }
+
+    public void Dispose() => _tokenLock.Dispose();
 
     private sealed class TokenResponse
     {
