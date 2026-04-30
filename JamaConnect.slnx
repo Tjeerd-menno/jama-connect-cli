@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/JamaConnect.Cli/JamaConnect.Cli.csproj" />
+    <Project Path="src/JamaConnect.Domain/JamaConnect.Domain.csproj" />
+    <Project Path="src/JamaConnect.Application/JamaConnect.Application.csproj" />
+    <Project Path="src/JamaConnect.Infrastructure/JamaConnect.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/JamaConnect.Domain.Tests/JamaConnect.Domain.Tests.csproj" />
+    <Project Path="tests/JamaConnect.Application.Tests/JamaConnect.Application.Tests.csproj" />
+  </Folder>
+</Solution>
