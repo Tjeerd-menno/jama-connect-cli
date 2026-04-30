@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>JamaConnect.Application</AssemblyName>
+    <RootNamespace>JamaConnect.Application</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JamaConnect.Domain\JamaConnect.Domain.csproj" />
+  </ItemGroup>
+</Project>

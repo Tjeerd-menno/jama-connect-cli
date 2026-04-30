@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>JamaConnect.Domain</AssemblyName>
+    <RootNamespace>JamaConnect.Domain</RootNamespace>
+  </PropertyGroup>
+</Project>
