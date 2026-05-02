@@ -10,10 +10,10 @@ internal static class LoginCommandExtensions
     {
         var command = new Command("login", "Authenticate with the Jama Connect server.");
 
-        command.SetHandler(async (context) =>
+        command.SetAction(async (parseResult, cancellationToken) =>
         {
             var handler = services.GetRequiredService<LoginCommandHandler>();
-            await handler.HandleAsync(new LoginCommand(), context.GetCancellationToken()).ConfigureAwait(false);
+            await handler.HandleAsync(new LoginCommand(), cancellationToken).ConfigureAwait(false);
             Console.WriteLine("Successfully authenticated with Jama Connect.");
         });
 
