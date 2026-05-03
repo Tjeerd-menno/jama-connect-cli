@@ -9,7 +9,7 @@ internal static class ProjectsCommandExtensions
     public static Command BuildProjectsCommand(IServiceProvider services)
     {
         var command = new Command("projects", "Manage Jama Connect projects.");
-        command.AddCommand(BuildListCommand(services));
+        command.Add(BuildListCommand(services));
         return command;
     }
 
@@ -17,10 +17,10 @@ internal static class ProjectsCommandExtensions
     {
         var command = new Command("list", "List all accessible projects.");
 
-        command.SetHandler(async (context) =>
+        command.SetAction(async (parseResult, cancellationToken) =>
         {
             var handler = services.GetRequiredService<GetProjectsQueryHandler>();
-            var projects = await handler.HandleAsync(new GetProjectsQuery(), context.GetCancellationToken()).ConfigureAwait(false);
+            var projects = await handler.HandleAsync(new GetProjectsQuery(), cancellationToken).ConfigureAwait(false);
 
             if (!projects.Any())
             {

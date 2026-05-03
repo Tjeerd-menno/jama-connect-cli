@@ -9,26 +9,26 @@ internal static class ItemsCommandExtensions
     public static Command BuildItemsCommand(IServiceProvider services)
     {
         var command = new Command("items", "Manage Jama Connect items.");
-        command.AddCommand(BuildListCommand(services));
+        command.Add(BuildListCommand(services));
         return command;
     }
 
     private static Command BuildListCommand(IServiceProvider services)
     {
-        var projectIdOption = new Option<int>(
-            "--project",
-            description: "The ID of the project to list items from.")
-        { IsRequired = true };
-        projectIdOption.AddAlias("-p");
+        var projectIdOption = new Option<int>("--project", "-p")
+        {
+            Description = "The ID of the project to list items from.",
+            Required = true
+        };
 
         var command = new Command("list", "List items in a project.");
-        command.AddOption(projectIdOption);
+        command.Add(projectIdOption);
 
-        command.SetHandler(async (context) =>
+        command.SetAction(async (parseResult, cancellationToken) =>
         {
-            var projectId = context.ParseResult.GetValueForOption(projectIdOption);
+            var projectId = parseResult.GetValue(projectIdOption);
             var handler = services.GetRequiredService<GetItemsQueryHandler>();
-            var items = await handler.HandleAsync(new GetItemsQuery(projectId), context.GetCancellationToken()).ConfigureAwait(false);
+            var items = await handler.HandleAsync(new GetItemsQuery(projectId), cancellationToken).ConfigureAwait(false);
 
             if (!items.Any())
             {

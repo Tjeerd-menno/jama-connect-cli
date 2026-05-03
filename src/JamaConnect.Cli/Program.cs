@@ -22,8 +22,8 @@ services.AddJamaConnectInfrastructure(configuration);
 var serviceProvider = services.BuildServiceProvider();
 
 var rootCommand = new RootCommand("Jama Connect CLI - manage your Jama Connect requirements from the command line.");
-rootCommand.AddCommand(LoginCommandExtensions.BuildLoginCommand(serviceProvider));
-rootCommand.AddCommand(ProjectsCommandExtensions.BuildProjectsCommand(serviceProvider));
-rootCommand.AddCommand(ItemsCommandExtensions.BuildItemsCommand(serviceProvider));
+rootCommand.Add(LoginCommandExtensions.BuildLoginCommand(serviceProvider));
+rootCommand.Add(ProjectsCommandExtensions.BuildProjectsCommand(serviceProvider));
+rootCommand.Add(ItemsCommandExtensions.BuildItemsCommand(serviceProvider));
 
-return await rootCommand.InvokeAsync(args);
+return await rootCommand.Parse(args).InvokeAsync();
