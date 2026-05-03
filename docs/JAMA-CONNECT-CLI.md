@@ -2,7 +2,7 @@
 
 ## Overview
 
-`jama-connect` is a cross-platform .NET 9 CLI that authenticates via OAuth 2.0 client credentials flow and lets you browse and interact with Jama Connect projects and items from a terminal.
+`jama-connect` is a cross-platform .NET 10 CLI that authenticates via OAuth 2.0 client credentials flow and lets you browse and interact with Jama Connect projects and items from a terminal.
 
 ---
 
@@ -100,7 +100,7 @@ ID       Document Key    Subject
 
 Configuration is resolved in this order (later sources override earlier ones):
 
-1. `appsettings.json` (next to the executable)
+1. Embedded default `appsettings.json`
 2. Environment variables prefixed with `JAMA_`
 
 ### `appsettings.json` schema
@@ -181,14 +181,22 @@ dotnet build JamaConnect.slnx --configuration Release
 # Test
 dotnet test JamaConnect.slnx
 
-# Publish self-contained executable (Linux x64)
-dotnet publish src/JamaConnect.Cli \
+# Publish Native AOT executable (Linux x64)
+dotnet publish src/JamaConnect.Cli/JamaConnect.Cli.csproj \
   --configuration Release \
   --runtime linux-x64 \
   --self-contained true \
-  -p:PublishSingleFile=true \
-  --output ./dist
+  --output ./dist/linux-x64
+
+# Publish Native AOT executable (Windows x64)
+dotnet publish src/JamaConnect.Cli/JamaConnect.Cli.csproj \
+  --configuration Release \
+  --runtime win-x64 \
+  --self-contained true \
+  --output ./dist/win-x64
 ```
+
+The Native AOT output is a self-contained executable: `jama-connect` for Linux and `jama-connect.exe` for Windows. Default configuration is embedded in the executable; provide deployment-specific values with `JAMA_`-prefixed environment variables.
 
 ---
 

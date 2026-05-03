@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.CommandLine;
 using JamaConnect.Cli.Commands;
 using JamaConnect.Infrastructure.Extensions;
@@ -5,9 +6,16 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-var configuration = new ConfigurationBuilder()
-    .SetBasePath(AppContext.BaseDirectory)
-    .AddJsonFile("appsettings.json", optional: true)
+var configurationBuilder = new ConfigurationBuilder();
+using var defaultConfiguration = Assembly
+    .GetExecutingAssembly()
+    .GetManifestResourceStream("JamaConnect.Cli.appsettings.json");
+if (defaultConfiguration is not null)
+{
+    configurationBuilder.AddJsonStream(defaultConfiguration);
+}
+
+var configuration = configurationBuilder
     .AddEnvironmentVariables("JAMA_")
     .Build();
 
