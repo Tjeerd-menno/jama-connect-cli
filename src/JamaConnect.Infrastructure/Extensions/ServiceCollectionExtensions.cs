@@ -17,7 +17,8 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddSingleton(Microsoft.Extensions.Options.Options.Create(LoadOptions(configuration)));
+        services.AddSingleton<IOptions<JamaConnectOptions>>(
+            Microsoft.Extensions.Options.Options.Create(LoadOptions(configuration)));
 
         services.AddHttpClient("auth")
             .ConfigureHttpClient((sp, client) =>
