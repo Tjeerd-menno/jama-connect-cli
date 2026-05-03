@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.CommandLine;
 using JamaConnect.Cli.Commands;
 using JamaConnect.Infrastructure.Extensions;
@@ -5,9 +6,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-var configuration = new ConfigurationBuilder()
-    .SetBasePath(AppContext.BaseDirectory)
-    .AddJsonFile("appsettings.json", optional: true)
+var configurationBuilder = new ConfigurationBuilder();
+var assembly = Assembly.GetExecutingAssembly();
+using var defaultConfiguration = assembly.GetManifestResourceStream("JamaConnect.Cli.appsettings.json")
+    ?? throw new InvalidOperationException(
+        "Required embedded configuration resource 'JamaConnect.Cli.appsettings.json' was not found. Ensure appsettings.json is included as an embedded resource.");
+configurationBuilder.AddJsonStream(defaultConfiguration);
+
+var configuration = configurationBuilder
     .AddEnvironmentVariables("JAMA_")
     .Build();
 

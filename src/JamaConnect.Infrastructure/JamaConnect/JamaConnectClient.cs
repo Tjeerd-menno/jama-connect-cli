@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using JamaConnect.Domain.Interfaces;
 using JamaConnect.Domain.Models;
 using JamaConnect.Infrastructure.JamaConnect.Dto;
+using JamaConnect.Infrastructure.Json;
 
 namespace JamaConnect.Infrastructure.JamaConnect;
 
@@ -34,7 +35,10 @@ internal sealed class JamaConnectClient : IProjectService, IItemService
     {
         using var client = await CreateAuthorizedClientAsync(cancellationToken).ConfigureAwait(false);
         var response = await client
-            .GetFromJsonAsync<PagedResponse<ProjectDto>>("/rest/v1/projects", cancellationToken)
+            .GetFromJsonAsync(
+                "/rest/v1/projects",
+                JamaConnectJsonSerializerContext.Default.PagedProjectResponse,
+                cancellationToken)
             .ConfigureAwait(false);
         return response?.Data?.Select(MapProject).ToList().AsReadOnly() ?? (IReadOnlyList<Project>)[];
     }
@@ -43,7 +47,10 @@ internal sealed class JamaConnectClient : IProjectService, IItemService
     {
         using var client = await CreateAuthorizedClientAsync(cancellationToken).ConfigureAwait(false);
         var response = await client
-            .GetFromJsonAsync<SingleResponse<ProjectDto>>($"/rest/v1/projects/{projectId}", cancellationToken)
+            .GetFromJsonAsync(
+                $"/rest/v1/projects/{projectId}",
+                JamaConnectJsonSerializerContext.Default.SingleProjectResponse,
+                cancellationToken)
             .ConfigureAwait(false);
         return response?.Data is null ? null : MapProject(response.Data);
     }
@@ -52,7 +59,10 @@ internal sealed class JamaConnectClient : IProjectService, IItemService
     {
         using var client = await CreateAuthorizedClientAsync(cancellationToken).ConfigureAwait(false);
         var response = await client
-            .GetFromJsonAsync<PagedResponse<ItemDto>>($"/rest/v1/items?project={projectId}", cancellationToken)
+            .GetFromJsonAsync(
+                $"/rest/v1/items?project={projectId}",
+                JamaConnectJsonSerializerContext.Default.PagedItemResponse,
+                cancellationToken)
             .ConfigureAwait(false);
         return response?.Data?.Select(MapItem).ToList().AsReadOnly() ?? (IReadOnlyList<Item>)[];
     }
@@ -61,7 +71,10 @@ internal sealed class JamaConnectClient : IProjectService, IItemService
     {
         using var client = await CreateAuthorizedClientAsync(cancellationToken).ConfigureAwait(false);
         var response = await client
-            .GetFromJsonAsync<SingleResponse<ItemDto>>($"/rest/v1/items/{itemId}", cancellationToken)
+            .GetFromJsonAsync(
+                $"/rest/v1/items/{itemId}",
+                JamaConnectJsonSerializerContext.Default.SingleItemResponse,
+                cancellationToken)
             .ConfigureAwait(false);
         return response?.Data is null ? null : MapItem(response.Data);
     }

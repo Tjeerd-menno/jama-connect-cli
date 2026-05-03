@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
-using System.Text.Json.Serialization;
 using JamaConnect.Domain.Interfaces;
+using JamaConnect.Infrastructure.Json;
 using JamaConnect.Infrastructure.Options;
 using Microsoft.Extensions.Options;
 
@@ -48,8 +48,12 @@ internal sealed class OidcAuthenticationService : IAuthenticationService, IDispo
 
     public async Task LoginAsync(CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(_options.ClientId) || string.IsNullOrWhiteSpace(_options.ClientSecret))
+        {
+            throw new InvalidOperationException("JamaConnect:ClientId and JamaConnect:ClientSecret must be configured.");
+        }
+
         using var httpClient = _httpClientFactory.CreateClient("auth");
-        httpClient.BaseAddress = new Uri(_options.BaseUrl);
 
         var tokenRequest = new FormUrlEncodedContent(new Dictionary<string, string>
         {
@@ -62,7 +66,7 @@ internal sealed class OidcAuthenticationService : IAuthenticationService, IDispo
         response.EnsureSuccessStatusCode();
 
         var tokenResponse = await response.Content
-            .ReadFromJsonAsync<TokenResponse>(cancellationToken: cancellationToken)
+            .ReadFromJsonAsync(JamaConnectJsonSerializerContext.Default.TokenResponse, cancellationToken)
             .ConfigureAwait(false);
 
         if (tokenResponse is not null)
@@ -80,16 +84,4 @@ internal sealed class OidcAuthenticationService : IAuthenticationService, IDispo
     }
 
     public void Dispose() => _tokenLock.Dispose();
-
-    private sealed class TokenResponse
-    {
-        [JsonPropertyName("access_token")]
-        public string? AccessToken { get; init; }
-
-        [JsonPropertyName("expires_in")]
-        public int ExpiresIn { get; init; }
-
-        [JsonPropertyName("token_type")]
-        public string? TokenType { get; init; }
-    }
 }

@@ -3,6 +3,9 @@
     <AssemblyName>jama-connect</AssemblyName>
     <RootNamespace>JamaConnect.Cli</RootNamespace>
     <OutputType>Exe</OutputType>
+    <IsAotCompatible>true</IsAotCompatible>
+    <PublishAot>true</PublishAot>
+    <SelfContained>true</SelfContained>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\JamaConnect.Application\JamaConnect.Application.csproj" />
@@ -15,8 +18,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <None Remove="appsettings.json" />
+    <EmbeddedResource Include="appsettings.json" LogicalName="JamaConnect.Cli.appsettings.json" />
   </ItemGroup>
 </Project>

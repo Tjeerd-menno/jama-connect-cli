@@ -1,10 +1,10 @@
 # Jama Connect CLI
 
-A .NET 9 command-line interface for interacting with [Jama Connect](https://www.jamasoftware.com/platform/jama-connect/) requirements management platform.
+A .NET 10 command-line interface for interacting with [Jama Connect](https://www.jamasoftware.com/platform/jama-connect/) requirements management platform.
 
 ## Prerequisites
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - A Jama Connect instance with API access
 - OAuth 2.0 client credentials (Client ID and Client Secret)
 
@@ -18,6 +18,26 @@ cd jama-connect-cli
 dotnet build src/JamaConnect.Cli/JamaConnect.Cli.csproj --configuration Release
 ```
 
+### Publish a native executable
+
+The CLI is configured for Native AOT publishing. Publish a self-contained native executable for a specific runtime:
+
+```bash
+dotnet publish src/JamaConnect.Cli/JamaConnect.Cli.csproj \
+  --configuration Release \
+  --runtime linux-x64 \
+  --self-contained true \
+  --output ./dist/linux-x64
+
+dotnet publish src/JamaConnect.Cli/JamaConnect.Cli.csproj \
+  --configuration Release \
+  --runtime win-x64 \
+  --self-contained true \
+  --output ./dist/win-x64
+```
+
+The generated executable is `jama-connect` on Linux and `jama-connect.exe` on Windows. Default configuration is embedded in the executable; use `JAMA_`-prefixed environment variables for deployment-specific values.
+
 ### Run directly
 
 ```bash
@@ -26,7 +46,7 @@ dotnet run --project src/JamaConnect.Cli -- [command] [options]
 
 ## Configuration
 
-Create or edit `appsettings.json` in the same directory as the executable (or the project directory when running via `dotnet run`):
+Default configuration is embedded in the executable:
 
 ```json
 {
@@ -40,7 +60,7 @@ Create or edit `appsettings.json` in the same directory as the executable (or th
 }
 ```
 
-You can also configure via environment variables prefixed with `JAMA_`:
+Override the embedded defaults with environment variables prefixed with `JAMA_`:
 
 | Environment Variable               | Description                             |
 |------------------------------------|-----------------------------------------|
@@ -157,6 +177,8 @@ GitHub Actions workflow runs on every push and pull request to `main`:
 - Restores NuGet packages
 - Builds in Release configuration (warnings treated as errors)
 - Runs all unit tests
+- Publishes Linux x64 and Windows x64 Native AOT executables
+- Uploads the native executables as CI artifacts
 
 ## License
 
