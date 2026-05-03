@@ -54,7 +54,6 @@ internal sealed class OidcAuthenticationService : IAuthenticationService, IDispo
         }
 
         using var httpClient = _httpClientFactory.CreateClient("auth");
-        httpClient.BaseAddress = new Uri(_options.BaseUrl);
 
         var tokenRequest = new FormUrlEncodedContent(new Dictionary<string, string>
         {
