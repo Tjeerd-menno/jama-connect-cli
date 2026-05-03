@@ -9,4 +9,6 @@ namespace JamaConnect.Infrastructure.Json;
 [JsonSerializable(typeof(SingleResponse<ProjectDto>), TypeInfoPropertyName = "SingleProjectResponse")]
 [JsonSerializable(typeof(PagedResponse<ItemDto>), TypeInfoPropertyName = "PagedItemResponse")]
 [JsonSerializable(typeof(SingleResponse<ItemDto>), TypeInfoPropertyName = "SingleItemResponse")]
-internal sealed partial class JamaConnectJsonSerializerContext : JsonSerializerContext;
+internal sealed partial class JamaConnectJsonSerializerContext : JsonSerializerContext
+{
+}
