@@ -7,11 +7,13 @@ public sealed class EvidenceUseCases
 {
     private readonly IProjectReader _projects;
     private readonly ITestManagementReader _testManagement;
+    private readonly IJamaPaginator _paginator;
 
-    public EvidenceUseCases(IProjectReader projects, ITestManagementReader testManagement)
+    public EvidenceUseCases(IProjectReader projects, ITestManagementReader testManagement, IJamaPaginator paginator)
     {
         _projects = projects;
         _testManagement = testManagement;
+        _paginator = paginator;
     }
 
     public async Task<EvidenceExport> ExportAsync(
@@ -23,13 +25,23 @@ public sealed class EvidenceUseCases
         CancellationToken cancellationToken = default)
     {
         var project = await _projects.GetProjectAsync(projectId, cancellationToken).ConfigureAwait(false);
-        JamaPage<TestRun>? runs = null;
+        IReadOnlyList<TestRun> runs = [];
         if (testCycleId is not null)
         {
-            runs = await _testManagement.GetTestRunsAsync(
-                new TestRunQuery(null, testCycleId, null),
-                new PageRequest(),
-                cancellationToken).ConfigureAwait(false);
+            var allRuns = new List<TestRun>();
+            await foreach (var run in _paginator.GetAllAsync(
+                (startAt, maxResults, ct) => _testManagement.GetTestRunsAsync(
+                    new TestRunQuery(null, testCycleId, null),
+                    new PageRequest(startAt, maxResults),
+                    ct),
+                50,
+                null,
+                cancellationToken))
+            {
+                allRuns.Add(run);
+            }
+
+            runs = allRuns;
         }
 
         var warnings = new List<string>();
@@ -51,7 +63,7 @@ public sealed class EvidenceUseCases
             project,
             testCycleId,
             include,
-            runs?.Data ?? [],
+            runs,
             warnings);
     }
 }

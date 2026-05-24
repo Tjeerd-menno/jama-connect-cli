@@ -10,6 +10,8 @@ public interface ISchemaReader
 
     Task<JamaPage<RelationshipTypeDefinition>> GetRelationshipTypesAsync(PageRequest page, CancellationToken cancellationToken = default);
 
+    Task<RelationshipTypeDefinition?> GetRelationshipTypeAsync(int id, CancellationToken cancellationToken = default);
+
     Task<JamaPage<JsonElementBackedVersion>> GetPickListsAsync(PageRequest page, CancellationToken cancellationToken = default);
 
     Task<JsonElementBackedVersion?> GetPickListAsync(int id, CancellationToken cancellationToken = default);

@@ -22,6 +22,9 @@ internal sealed class SchemaAdapter : ISchemaReader
     public Task<JamaPage<RelationshipTypeDefinition>> GetRelationshipTypesAsync(PageRequest page, CancellationToken cancellationToken = default)
         => _client.GetPageAsync("/rest/v1/relationshiptypes", page, x => new RelationshipTypeDefinition(x.GetInt("id"), x.GetStringOrNull("name") ?? string.Empty, x), cancellationToken);
 
+    public Task<RelationshipTypeDefinition?> GetRelationshipTypeAsync(int id, CancellationToken cancellationToken = default)
+        => _client.GetSingleAsync($"/rest/v1/relationshiptypes/{id}", x => new RelationshipTypeDefinition(x.GetInt("id"), x.GetStringOrNull("name") ?? string.Empty, x), cancellationToken);
+
     public Task<JamaPage<JsonElementBackedVersion>> GetPickListsAsync(PageRequest page, CancellationToken cancellationToken = default)
         => _client.GetPageAsync("/rest/v1/picklists", page, x => new JsonElementBackedVersion(x.GetInt("id"), x), cancellationToken);
 

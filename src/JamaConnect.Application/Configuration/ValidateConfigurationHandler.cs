@@ -6,19 +6,36 @@ public sealed class ValidateConfigurationHandler
 {
     private readonly JamaCliConfiguration _configuration;
     private readonly ISchemaReader _schemaReader;
+    private readonly IJamaPaginator _paginator;
 
-    public ValidateConfigurationHandler(JamaCliConfiguration configuration, ISchemaReader schemaReader)
+    public ValidateConfigurationHandler(JamaCliConfiguration configuration, ISchemaReader schemaReader, IJamaPaginator paginator)
     {
         _configuration = configuration;
         _schemaReader = schemaReader;
+        _paginator = paginator;
     }
 
     public async Task<ConfigurationValidationResult> HandleAsync(string profile, int? projectId, CancellationToken cancellationToken = default)
     {
-        var itemTypes = await _schemaReader.GetItemTypesAsync(new Domain.Models.PageRequest(), cancellationToken).ConfigureAwait(false);
-        var relationshipTypes = await _schemaReader.GetRelationshipTypesAsync(new Domain.Models.PageRequest(), cancellationToken).ConfigureAwait(false);
-        var itemTypeIds = itemTypes.Data.Select(x => x.Id).ToHashSet();
-        var relationshipTypeIds = relationshipTypes.Data.Select(x => x.Id).ToHashSet();
+        var itemTypeIds = new HashSet<int>();
+        await foreach (var itemType in _paginator.GetAllAsync(
+            (startAt, maxResults, ct) => _schemaReader.GetItemTypesAsync(new Domain.Models.PageRequest(startAt, maxResults), ct),
+            50,
+            null,
+            cancellationToken))
+        {
+            itemTypeIds.Add(itemType.Id);
+        }
+
+        var relationshipTypeIds = new HashSet<int>();
+        await foreach (var relationshipType in _paginator.GetAllAsync(
+            (startAt, maxResults, ct) => _schemaReader.GetRelationshipTypesAsync(new Domain.Models.PageRequest(startAt, maxResults), ct),
+            50,
+            null,
+            cancellationToken))
+        {
+            relationshipTypeIds.Add(relationshipType.Id);
+        }
 
         var itemAliases = _configuration.Aliases.ItemTypes
             .Select(x => new AliasValidation(x.Key, x.Value.ItemTypeId, itemTypeIds.Contains(x.Value.ItemTypeId)))

@@ -10,17 +10,20 @@ public sealed class TraceUseCases
     private readonly IRelationshipReader _relationships;
     private readonly JamaCliConfiguration _configuration;
     private readonly AliasResolver _aliases;
+    private readonly IJamaPaginator _paginator;
 
     public TraceUseCases(
         IItemReader items,
         IRelationshipReader relationships,
         JamaCliConfiguration configuration,
-        AliasResolver aliases)
+        AliasResolver aliases,
+        IJamaPaginator paginator)
     {
         _items = items;
         _relationships = relationships;
         _configuration = configuration;
         _aliases = aliases;
+        _paginator = paginator;
     }
 
     public async Task<TraceGraph> ShowAsync(string item, string direction, int depth, CancellationToken cancellationToken = default)
@@ -84,10 +87,6 @@ public sealed class TraceUseCases
         foreach (var rule in _configuration.TraceabilityRules)
         {
             rulesEvaluated++;
-            var sourcePage = await _items.SearchItemsAsync(
-                new ItemSearchCriteria(projectId, rule.Source, null, null, null, null, false, []),
-                new PageRequest(),
-                cancellationToken).ConfigureAwait(false);
 
             int relationshipTypeId;
             try
@@ -100,14 +99,32 @@ public sealed class TraceUseCases
                 continue;
             }
 
-            foreach (var item in sourcePage.Data)
+            await foreach (var item in _paginator.GetAllAsync(
+                (startAt, maxResults, ct) => _items.SearchItemsAsync(
+                    new ItemSearchCriteria(projectId, rule.Source, null, null, null, null, false, []),
+                    new PageRequest(startAt, maxResults),
+                    ct),
+                50,
+                null,
+                cancellationToken))
             {
                 itemsEvaluated++;
-                var relationships = await _relationships.GetRelationshipsAsync(
-                    new RelationshipQuery(item.Id, rule.Direction, []),
-                    new PageRequest(),
-                    cancellationToken).ConfigureAwait(false);
-                var actualTargets = relationships.Data.Count(x => x.RelationshipTypeId == relationshipTypeId);
+                var actualTargets = 0;
+                await foreach (var relationship in _paginator.GetAllAsync(
+                    (startAt, maxResults, ct) => _relationships.GetRelationshipsAsync(
+                        new RelationshipQuery(item.Id, rule.Direction, []),
+                        new PageRequest(startAt, maxResults),
+                        ct),
+                    50,
+                    null,
+                    cancellationToken))
+                {
+                    if (relationship.RelationshipTypeId == relationshipTypeId)
+                    {
+                        actualTargets++;
+                    }
+                }
+
                 if (actualTargets < rule.MinTargets)
                 {
                     gaps.Add(new TraceGap(
@@ -130,20 +147,32 @@ public sealed class TraceUseCases
     public async Task<TraceMatrixResult> MatrixAsync(int projectId, string from, string to, string relation, CancellationToken cancellationToken = default)
     {
         var relationshipTypeId = _aliases.ResolveRelationshipTypeId(relation);
-        var sources = await _items.SearchItemsAsync(new ItemSearchCriteria(projectId, from, null, null, null, null, false, []), new PageRequest(), cancellationToken).ConfigureAwait(false);
         var rows = new List<TraceMatrixRow>();
-        foreach (var source in sources.Data)
+        await foreach (var source in _paginator.GetAllAsync(
+            (startAt, maxResults, ct) => _items.SearchItemsAsync(
+                new ItemSearchCriteria(projectId, from, null, null, null, null, false, []),
+                new PageRequest(startAt, maxResults),
+                ct),
+            50,
+            null,
+            cancellationToken))
         {
-            var relationships = await _relationships.GetRelationshipsAsync(new RelationshipQuery(source.Id, "both", []), new PageRequest(), cancellationToken).ConfigureAwait(false);
-            var matching = relationships.Data.Where(x => x.RelationshipTypeId == relationshipTypeId).ToArray();
-            if (matching.Length == 0)
+            var hasMatchingRelationship = false;
+            await foreach (var relationship in _paginator.GetAllAsync(
+                (startAt, maxResults, ct) => _relationships.GetRelationshipsAsync(
+                    new RelationshipQuery(source.Id, "both", []),
+                    new PageRequest(startAt, maxResults),
+                    ct),
+                50,
+                null,
+                cancellationToken))
             {
-                rows.Add(new TraceMatrixRow(source, null, relation, false, false));
-                continue;
-            }
+                if (relationship.RelationshipTypeId != relationshipTypeId)
+                {
+                    continue;
+                }
 
-            foreach (var relationship in matching)
-            {
+                hasMatchingRelationship = true;
                 var targetId = relationship.FromItemId == source.Id ? relationship.ToItemId : relationship.FromItemId;
                 var targetItem = await _items.GetItemAsync(new ItemIdentifier(targetId, null), new ItemQueryOptions([], true), cancellationToken).ConfigureAwait(false);
                 if (targetItem is null || (!string.IsNullOrWhiteSpace(to) && !TargetMatches(to, targetItem)))
@@ -152,6 +181,11 @@ public sealed class TraceUseCases
                 }
 
                 rows.Add(new TraceMatrixRow(source, targetItem, relation, true, relationship.Suspect));
+            }
+
+            if (!hasMatchingRelationship)
+            {
+                rows.Add(new TraceMatrixRow(source, null, relation, false, false));
             }
         }
 

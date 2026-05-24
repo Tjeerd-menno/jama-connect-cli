@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.Globalization;
 using System.Text.Json;
 using JamaConnect.Application.TestManagement;
 using JamaConnect.Application.Traceability;
@@ -289,15 +290,23 @@ internal static class TestManagementCommandExtensions
 
     private static Command BuildRunTraceCommand(IServiceProvider services, CliRuntime runtime)
     {
-        var run = new Argument<string>("run") { Description = "Test run ID." };
+        var run = new Argument<int>("run") { Description = "Test run ID." };
         var command = new Command("trace", "Show trace graph for a test run.");
         command.Add(run);
         command.SetAction(async (parseResult, cancellationToken) =>
         {
             await Execution.RunAsync(runtime, parseResult, async (context, ct) =>
             {
+                var runId = parseResult.GetValue(run);
+                var testRun = await services.GetRequiredService<TestManagementUseCases>().GetRunAsync(runId, ct).ConfigureAwait(false)
+                    ?? throw new InvalidOperationException($"Test run '{runId}' was not found.");
+                if (testRun.TestCaseId is null)
+                {
+                    throw new InvalidOperationException($"Test run '{runId}' does not include a related test case id.");
+                }
+
                 var graph = await services.GetRequiredService<TraceUseCases>()
-                    .ShowAsync(parseResult.GetValue(run)!, "both", 1, ct)
+                    .ShowAsync(testRun.TestCaseId.Value.ToString(CultureInfo.InvariantCulture), "both", 1, ct)
                     .ConfigureAwait(false);
                 CliOutput.WriteResult(context, "trace.graph", graph, graph.Warnings);
             }, cancellationToken).ConfigureAwait(false);

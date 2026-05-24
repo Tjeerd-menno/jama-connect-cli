@@ -25,22 +25,25 @@ var serviceProvider = services.BuildServiceProvider();
 var formatOption = new Option<string>("--format")
 {
     Description = "Output format: table, json, ndjson, or csv.",
-    DefaultValueFactory = _ => "table"
+    DefaultValueFactory = _ => "table",
+    Recursive = true
 };
 var profileOption = new Option<string>("--profile")
 {
     Description = "Configuration profile name.",
-    DefaultValueFactory = _ => "default"
+    DefaultValueFactory = _ => "default",
+    Recursive = true
 };
-var quietOption = new Option<bool>("--quiet") { Description = "Reduce non-result output." };
-var verboseOption = new Option<bool>("--verbose") { Description = "Increase diagnostic output." };
-var noColorOption = new Option<bool>("--no-color") { Description = "Disable color output." };
-var dryRunOption = new Option<bool>("--dry-run") { Description = "Plan write operations without sending them." };
-var agentOption = new Option<bool>("--agent") { Description = "Use deterministic JSON agent mode." };
+var quietOption = new Option<bool>("--quiet") { Description = "Reduce non-result output.", Recursive = true };
+var verboseOption = new Option<bool>("--verbose") { Description = "Increase diagnostic output.", Recursive = true };
+var noColorOption = new Option<bool>("--no-color") { Description = "Disable color output.", Recursive = true };
+var dryRunOption = new Option<bool>("--dry-run") { Description = "Plan write operations without sending them.", Recursive = true };
+var agentOption = new Option<bool>("--agent") { Description = "Use deterministic JSON agent mode.", Recursive = true };
 var errorFormatOption = new Option<string>("--error-format")
 {
     Description = "Error format: text or json.",
-    DefaultValueFactory = _ => "text"
+    DefaultValueFactory = _ => "text",
+    Recursive = true
 };
 var runtime = new CliRuntime(formatOption, profileOption, quietOption, verboseOption, noColorOption, dryRunOption, agentOption, errorFormatOption);
 

@@ -17,7 +17,8 @@ public sealed class TraceUseCasesTests
             Mock.Of<IItemReader>(),
             Mock.Of<IRelationshipReader>(),
             new JamaCliConfiguration(),
-            new AliasResolver(new JamaCliConfiguration()));
+            new AliasResolver(new JamaCliConfiguration()),
+            Mock.Of<IJamaPaginator>());
 
         var result = await sut.FindGapsAsync(1001);
 

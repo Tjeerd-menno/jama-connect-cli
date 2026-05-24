@@ -100,8 +100,8 @@ internal static class SchemaCommandExtensions
             await Execution.RunAsync(runtime, parseResult, async (context, ct) =>
             {
                 var reader = services.GetRequiredService<ISchemaReader>();
-                var page = await reader.GetRelationshipTypesAsync(new PageRequest(), ct).ConfigureAwait(false);
-                CliOutput.WriteResult(context, "schema.relationship-types.get.result", page.Data.FirstOrDefault(x => x.Id == parseResult.GetValue(id)));
+                var result = await reader.GetRelationshipTypeAsync(parseResult.GetValue(id), ct).ConfigureAwait(false);
+                CliOutput.WriteResult(context, "schema.relationship-types.get.result", result);
             }, cancellationToken).ConfigureAwait(false);
         });
         return command;
