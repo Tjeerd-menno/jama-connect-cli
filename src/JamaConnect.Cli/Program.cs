@@ -4,7 +4,6 @@ using JamaConnect.Cli.Commands;
 using JamaConnect.Infrastructure.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 var configurationBuilder = new ConfigurationBuilder();
 var assembly = Assembly.GetExecutingAssembly();
@@ -18,11 +17,6 @@ var configuration = configurationBuilder
     .Build();
 
 var services = new ServiceCollection();
-services.AddLogging(logging =>
-{
-    logging.AddConsole();
-    logging.SetMinimumLevel(LogLevel.Warning);
-});
 services.AddJamaConnectInfrastructure(configuration);
 
 var serviceProvider = services.BuildServiceProvider();
