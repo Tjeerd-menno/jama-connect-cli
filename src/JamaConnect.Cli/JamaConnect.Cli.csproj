@@ -6,6 +6,7 @@
     <IsAotCompatible>true</IsAotCompatible>
     <PublishAot>true</PublishAot>
     <SelfContained>true</SelfContained>
+    <NoWarn>$(NoWarn);IL2026;IL3050;CA1861;CA1869</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\JamaConnect.Application\JamaConnect.Application.csproj" />

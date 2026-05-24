@@ -6,15 +6,16 @@ namespace JamaConnect.Application.Projects;
 
 public sealed class GetProjectsQueryHandler : IQueryHandler<GetProjectsQuery, IReadOnlyList<Project>>
 {
-    private readonly IProjectService _projectService;
+    private readonly IProjectReader _projectReader;
 
-    public GetProjectsQueryHandler(IProjectService projectService)
+    public GetProjectsQueryHandler(IProjectReader projectReader)
     {
-        _projectService = projectService;
+        _projectReader = projectReader;
     }
 
-    public Task<IReadOnlyList<Project>> HandleAsync(GetProjectsQuery query, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Project>> HandleAsync(GetProjectsQuery query, CancellationToken cancellationToken = default)
     {
-        return _projectService.GetProjectsAsync(cancellationToken);
+        var page = await _projectReader.GetProjectsAsync(new PageRequest(), cancellationToken).ConfigureAwait(false);
+        return page.Data;
     }
 }
