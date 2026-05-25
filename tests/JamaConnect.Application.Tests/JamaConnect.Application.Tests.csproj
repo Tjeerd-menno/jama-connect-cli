@@ -10,6 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\JamaConnect.Application\JamaConnect.Application.csproj" />
     <ProjectReference Include="..\..\src\JamaConnect.Domain\JamaConnect.Domain.csproj" />
+    <ProjectReference Include="..\..\src\JamaConnect.Infrastructure\JamaConnect.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />

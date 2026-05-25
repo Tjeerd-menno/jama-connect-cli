@@ -9,4 +9,10 @@ public sealed class JamaConnectOptions
     public required string ClientSecret { get; init; }
     public string TokenEndpoint { get; init; } = "/rest/oauth/token";
     public int TimeoutSeconds { get; init; } = 30;
+
+    public int RetryMaxAttempts { get; init; } = 5;
+
+    public int RetryInitialDelayMilliseconds { get; init; } = 250;
+
+    public int RetryMaxDelaySeconds { get; init; } = 10;
 }

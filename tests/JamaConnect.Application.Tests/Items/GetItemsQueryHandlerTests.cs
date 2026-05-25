@@ -9,12 +9,12 @@ namespace JamaConnect.Application.Tests.Items;
 
 public sealed class GetItemsQueryHandlerTests
 {
-    private readonly Mock<IItemService> _itemServiceMock = new();
+    private readonly Mock<IItemReader> _itemReaderMock = new();
     private readonly GetItemsQueryHandler _sut;
 
     public GetItemsQueryHandlerTests()
     {
-        _sut = new GetItemsQueryHandler(_itemServiceMock.Object);
+        _sut = new GetItemsQueryHandler(_itemReaderMock.Object);
     }
 
     [Fact]
@@ -27,9 +27,9 @@ public sealed class GetItemsQueryHandlerTests
             new() { Id = 1, DocumentKey = "REQ-001", Subject = "Requirement 1", TypeId = 1, ProjectId = projectId },
             new() { Id = 2, DocumentKey = "REQ-002", Subject = "Requirement 2", TypeId = 1, ProjectId = projectId },
         };
-        _itemServiceMock
-            .Setup(x => x.GetItemsAsync(projectId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedItems.AsReadOnly());
+        _itemReaderMock
+            .Setup(x => x.SearchItemsAsync(It.Is<ItemSearchCriteria>(c => c.ProjectId == projectId), It.IsAny<PageRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new JamaPage<JamaItem>(0, 50, expectedItems.Count, expectedItems.Count, expectedItems.Select(x => new JamaItem(x.Id, x.DocumentKey, null, x.ProjectId, x.TypeId, null, x.ParentId, x.Subject, new Dictionary<string, System.Text.Json.JsonElement>(), null)).ToArray()));
 
         // Act
         var result = await _sut.HandleAsync(new GetItemsQuery(projectId));
@@ -43,9 +43,9 @@ public sealed class GetItemsQueryHandlerTests
     public async Task HandleAsync_WhenNoItemsExist_ShouldReturnEmptyList()
     {
         // Arrange
-        _itemServiceMock
-            .Setup(x => x.GetItemsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Item>().AsReadOnly());
+        _itemReaderMock
+            .Setup(x => x.SearchItemsAsync(It.IsAny<ItemSearchCriteria>(), It.IsAny<PageRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new JamaPage<JamaItem>(0, 50, 0, 0, []));
 
         // Act
         var result = await _sut.HandleAsync(new GetItemsQuery(1));
@@ -59,14 +59,14 @@ public sealed class GetItemsQueryHandlerTests
     {
         // Arrange
         const int projectId = 99;
-        _itemServiceMock
-            .Setup(x => x.GetItemsAsync(projectId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Item>().AsReadOnly());
+        _itemReaderMock
+            .Setup(x => x.SearchItemsAsync(It.Is<ItemSearchCriteria>(c => c.ProjectId == projectId), It.IsAny<PageRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new JamaPage<JamaItem>(0, 50, 0, 0, []));
 
         // Act
         await _sut.HandleAsync(new GetItemsQuery(projectId));
 
         // Assert
-        _itemServiceMock.Verify(x => x.GetItemsAsync(projectId, It.IsAny<CancellationToken>()), Times.Once);
+        _itemReaderMock.Verify(x => x.SearchItemsAsync(It.Is<ItemSearchCriteria>(c => c.ProjectId == projectId), It.IsAny<PageRequest>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

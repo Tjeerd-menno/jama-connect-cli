@@ -1,37 +1,45 @@
-name: CI
+name: Pull Request
 
 on:
-  push:
-    branches: [ main ]
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  build-and-test:
-    name: Build and Test
+  build-test:
+    name: Build and test
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+
     steps:
-      - uses: actions/checkout@v6
+      - name: Check out repository
+        uses: actions/checkout@v6
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: 10.0.x
 
-      - name: Restore dependencies
+      - name: Restore
         run: dotnet restore JamaConnect.slnx
 
       - name: Build
-        run: dotnet build JamaConnect.slnx --no-restore --configuration Release
+        run: dotnet build JamaConnect.slnx --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test JamaConnect.slnx --no-build --configuration Release --verbosity normal
+        run: dotnet test JamaConnect.slnx --configuration Release --no-build --verbosity normal
 
   native-aot:
     name: Native AOT (${{ matrix.rid }})
     runs-on: ${{ matrix.os }}
-    permissions:
-      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -42,13 +50,15 @@ jobs:
           - os: windows-latest
             rid: win-x64
             executable: jama-connect.exe
+
     steps:
-      - uses: actions/checkout@v6
+      - name: Check out repository
+        uses: actions/checkout@v6
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: 10.0.x
 
       - name: Publish Native AOT
         shell: pwsh
@@ -59,13 +69,7 @@ jobs:
           --self-contained true
           --output artifacts/native/${{ matrix.rid }}
 
-      - name: Verify native executable
+      - name: Smoke test native executable
         shell: pwsh
         run: ./artifacts/native/${{ matrix.rid }}/${{ matrix.executable }} --help
 
-      - name: Upload native executable
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: jama-connect-${{ matrix.rid }}
-          path: artifacts/native/${{ matrix.rid }}/${{ matrix.executable }}
-          if-no-files-found: error
